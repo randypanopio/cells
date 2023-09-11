@@ -1,0 +1,11 @@
+.vscode/
+C# (Unity)/bin/
+C# (Unity)/obj/
+*.csproj
+
+
+
+
+*__pycache__/
+*.pyc
+*.log
