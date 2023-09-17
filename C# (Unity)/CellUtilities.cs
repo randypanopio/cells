@@ -6,6 +6,9 @@ namespace CellGeneration.CellUtilities
 {
     public static class CellConstants
     {
+        public const int IGNORED = 200;
+        public const int UNSET = 0;
+
         public const int BROKEN_TILE = 69; //something went wrong and the generator for some reason has an unknown tile
         public const int SPAWNER_TILE = -50; // tile read from the tilemap editor, assign an "empty" no sprite tile, is used for the spawner system
         public const int IGNORED_TILE = -40; // Special tiles set in the tilemap editor, generator reads and assigns them as this and is ignored during generation
