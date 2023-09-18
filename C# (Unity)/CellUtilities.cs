@@ -16,8 +16,13 @@ namespace CellGeneration.CellUtilities
         public const int UNPROCESSED_TERRAIN_TILE = 0; // temporary value assigned from a read tilemap, must be processed further
         public const int EMPTY_TILE = -1; // "dead" value for celular automata, also used in general for final tile processing
         public const int SOLID_TILE = 1; // "alive" value for celular automata, also used in general for final tile processing
+
+
+        // Sadly theres no such thing as an immmutable kvp, this is as good as it gets. besides maybe you might want to override probabilities
         public const int ALMOST_EMPTY_TILE = -2; // "almost dead" value for celular automata
+        public const float ALMOST_EMPTY_TILE_PROBABILITY = 0.5f; // "almost dead" value for celular automata
         public const int ALMOST_SOLID_TILE = 2; // "almost alive" value for celular automata
+        public const float ALMOST_SOLID_TILE_PROBABILITY = 0.5f;
 
         //additional terrain values
         public const int HALLWAY_TILE = 11;
@@ -25,6 +30,34 @@ namespace CellGeneration.CellUtilities
         public const int UNPROCESSED_BIOME_TILE = -3;
     }
 
+
+    public static class Randomize {
+
+        /// <summary>
+        /// TODO add documentation and maybe look into optimization.
+        /// returns the index of a randomly chose value based on the weights from the passed array
+        /// </summary>
+        /// <param name="weights"></param>
+        /// <returns></returns>
+        public static int GetRandomWeightedIndex(float[] weights){
+            // Validate
+			if (weights == null || weights.Length == 0) return -1; // Empty array
+            if (weights.Any(w => w < 0)) return -1; // contains negative weight
+
+            float totalWeight = weights.Sum();
+            float randomValue = (float)new Random().NextDouble() * totalWeight;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                if (randomValue < weights[i])
+                {
+                    return i;
+                }
+
+                randomValue -= weights[i];
+            }
+            return -1; // Failed weight selection, return default
+        }
+    }
 
     /// <summary>
     /// Used for Region based logic

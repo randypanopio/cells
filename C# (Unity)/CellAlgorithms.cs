@@ -6,11 +6,13 @@ using CellGeneration.CellUtilities;
 namespace CellGeneration
 {
 
-	public class Biome
+	// TODO rename
+	public class CellValue
 	{
 		public int Value;
-		public int Weight;
+		public float Weight; // 0%-100%
 	}
+
 
 	public class Cell
 	{
@@ -20,35 +22,35 @@ namespace CellGeneration
 		{
 			Value = CellConstants.UNSET;
 			BiomeValue = CellConstants.UNSET;
-			CustomCell = false;
 			cacheValue = true;
 			cacheBiome = true;
-			StopProcessing = false;
+			Overridable = true;
 		}
 
-		// // pretty useless ctor
-		// public Cell(int value, int biomeValue, bool customCell = false, bool cacheValue = true, bool cacheBiome = true)
-		// {
-		// 	CustomCell = customCell;
-		// 	if (CustomCell)
-		// 	{
-		// 		// TODO i dont need to set defaults, B/C when doing passes, i would just check if custom cell
-		// 		Value = CellConstants.IGNORED;
-		// 		BiomeValue = CellConstants.IGNORED;
-		// 		StopProcessing = true;
-		// 	}
-		// 	else
-		// 	{
-		// 		Value = value;
-		// 	}
-		// 	BiomeValue = biomeValue;
-		// 	this.cacheBiome = cacheBiome;
-		// 	this.cacheValue = cacheValue;
-		// }
+		public Cell(int value, int biomeValue, bool Overridable, bool cacheValue = true, bool cacheBiome = true)
+		{
+			this.Overridable = Overridable;
+			if (Overridable)
+			{
+				// TODO i dont need to set defaults, B/C when doing passes, i would just check if custom cell
+				// NVM i do need to still set values so they can be distinguished during passes, but instead CANNOT be overriden
+				Value = CellConstants.IGNORED;
+				BiomeValue = CellConstants.IGNORED;
+				Overridable = false;
+			}
+			else
+			{
+				Value = value;
+				Overridable = true;
+			}
+			BiomeValue = biomeValue;
+			this.cacheBiome = cacheBiome;
+			this.cacheValue = cacheValue;
+		}
 
-		public bool CustomCell { get; private set; }
 
-		public bool StopProcessing { get; set; }
+		// SET when used by custom cells, or whenever a certain cell is no longer needed in the processing passes
+		public bool Overridable { get; set; }
 
 		private int _value;
 		public int Value
@@ -56,7 +58,7 @@ namespace CellGeneration
 			get { return _value; }
 			set
 			{
-				if (CustomCell) return;
+				if (Overridable) return; // Not sure if i need this
 				if (cacheValue)
 				{
 					PreviousValue = _value;
@@ -73,7 +75,7 @@ namespace CellGeneration
 			get { return _biomeValue; }
 			set
 			{
-				if (CustomCell) return;
+				if (Overridable) return;
 				if (cacheBiome)
 				{
 					PreviousBiomeValue = _biomeValue;
@@ -93,8 +95,7 @@ namespace CellGeneration
 	{
 		// MAYBE TODO, add generic helper functions that use int maps to convert into Cell[,] maps, if that makes sense/useful
 
-		public static Cell[,] GenerateBaseMap(int width, int height, float seed){
-			Random pseudoRandom = new(seed.GetHashCode());
+		public static Cell[,] GenerateEmptyMap(int width, int height){
 			Cell[,] map = new Cell[width, height];
 			for (int x = 0; x < width; x++)
 			{
@@ -103,8 +104,31 @@ namespace CellGeneration
 					map[x,y] = new Cell();
 				}
 			}
-
 			return map;
+		}
+
+		public static Cell[,] RandomFill(Cell[,] map, float seed, List<KeyValuePair<int, float>> cellValues){
+			if (cellValues.Count > 0) {
+				Random pseudoRandom = new(seed.GetHashCode());
+				float[] cellValueWeights = cellValues.Select(kv => kv.Value).ToArray();
+				for (int x = 0; x < map.GetLength(0); x++)
+				{
+					for (int y = 0; y < map.GetLength(1); y++)
+					{
+						if (map[x, y].Overridable)
+						{
+							// generate a random value from seed
+							// pick a value from cellValues based on spreaded weight
+							map[x,y].Value = cellValues[Randomize.GetRandomWeightedIndex(cellValueWeights)].Key;
+						}
+					}
+				}
+				return map;
+			}
+			else
+			{
+				return map;
+			}
 		}
 
 		public static Cell[,] RandomFill (Cell[,] map, float seed, float fillPercent)
@@ -114,7 +138,7 @@ namespace CellGeneration
 			{
 				for (int y = 0; y < map.GetLength(1); y++)
 				{
-					if (!map[x, y].StopProcessing && !map[x, y].CustomCell)
+					if (map[x, y].Overridable)
 					{
 						map[x, y].Value = (pseudoRandom.Next(0, 100) < fillPercent) ? CellConstants.ALMOST_SOLID_TILE : CellConstants.ALMOST_EMPTY_TILE;
 

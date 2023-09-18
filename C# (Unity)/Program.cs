@@ -1,4 +1,6 @@
-﻿namespace CellGeneration
+﻿using CellGeneration.CellUtilities;
+
+namespace CellGeneration
 {
     class Program
     {
@@ -6,18 +8,26 @@
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            int width = 2560, height = 2560;
+            int width = 64, height = 64;
             float seed = CellAlgorithms.GenerateSeed();
             Console.WriteLine("seed: " + seed);
-            Console.WriteLine("Cell Count: " + width*height);
+            Console.WriteLine("Cell Count: " + width * height);
 
             // STEP 1 TODO build out base biome map generation like good oll times
             // int[,] imap = new int[width, height];
             // imap = CellAlgorithms.RandomFill(imap, seed, 50);
             // map = CellAlgorithms.SmoothMap(map, 12);
 
-            Cell[,] map = BaseCellMaps.GenerateBaseMap(width, height, seed);
-            map = BaseCellMaps.RandomFill(map, seed, 50);
+            List<KeyValuePair<int, float>> cellValues = new()
+            {
+                new(CellConstants.ALMOST_EMPTY_TILE, CellConstants.ALMOST_EMPTY_TILE_PROBABILITY),
+                new(CellConstants.ALMOST_SOLID_TILE, CellConstants.ALMOST_SOLID_TILE_PROBABILITY)
+            };
+
+            Cell[,] map = BaseCellMaps.GenerateEmptyMap(width, height);
+            map = BaseCellMaps.RandomFill(map, seed, cellValues);
+
+
             // for (int i = 0; i <  map.GetLength(0); i++)
             // {
             //     for (int j = 0; j < map.GetLength(1); j++)
